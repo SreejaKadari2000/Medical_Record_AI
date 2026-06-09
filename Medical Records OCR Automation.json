@@ -1,0 +1,459 @@
+{
+  "name": "Medical Records OCR Automation V1 copy",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.YOUR_SERVICE_NAME.com/v1/files",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "=file",
+              "inputDataFieldName": "attachment_0"
+            },
+            {
+              "name": "purpose",
+              "value": "ocr"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "Mistral_Id",
+      "name": "Upload to Mistral",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        480,
+        240
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id":"Mistral_Cred_Id",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.YOUR_SERVICE_NAME.com/v1/files/{{$json.id}}/url",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "expiry",
+              "value": "24"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id":"Get_Siged_URL_Id",
+      "name": "Get Signed URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        704,
+        240
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id":"Get_Siged_URL_Cred_Id",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.YOUR_SERVICE_NAME.com/v1/ocr",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-ocr-latest\",\n  \"document\": {\n    \"type\": \"document_url\",\n    \"document_url\": \"{{ $json.url }}\"\n  },\n  \"include_image_base64\": true\n}",
+        "options": {}
+      },
+      "id":"Get_OCR_Results_Id",
+      "name": "Get OCR Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        928,
+        240
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Get_OCR_Results_Cred_Id",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "13meknFzUEV3vYiS7_0AechwDXGWD9RpcvGYXliNraI8",
+          "mode": "list",
+          "cachedResultName": "Patient_Summary_Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13meknFzUEV3vYiS7_0AechwDXGWD9RpcvGYXliNraI8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Patients",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13meknFzUEV3vYiS7_0AechwDXGWD9RpcvGYXliNraI8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Notes": "={{ $('Data cleaning').item.json.Notes }}",
+            "Red Flags": "={{ $('Message a model').item.json.content[0].text }}",
+            "Chronology Summary": "={{ $('Message a model').item.json.content[0].text }}",
+            "Lab Results": "={{ $('Data cleaning').item.json['Lab Results'] }}",
+            "Symptoms": "={{ $('Data cleaning').item.json.Symptoms }}",
+            "Medications": "={{ $('Data cleaning').item.json.Medications }}",
+            "Diagnosis": "={{ $('Data cleaning').item.json.Diagnosis }}",
+            "Provider": "={{ $('Data cleaning').item.json['Patient ID'] }}",
+            "Date of Visit": "={{ $('Data cleaning').item.json['Date of Birth'] }}",
+            "Patient Name": "={{ $('Data cleaning').item.json.Name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Patient Name",
+              "displayName": "Patient Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date of Visit",
+              "displayName": "Date of Visit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Provider",
+              "displayName": "Provider",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Diagnosis",
+              "displayName": "Diagnosis",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Medications",
+              "displayName": "Medications",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Symptoms",
+              "displayName": "Symptoms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lab Results",
+              "displayName": "Lab Results",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chronology Summary",
+              "displayName": "Chronology Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Red Flags",
+              "displayName": "Red Flags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id":"Google_Sheets_Id",
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1728,
+        240
+      ],
+      "typeVersion": 4.5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Google_Sheets_Cred_Id",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get OCR results from the input\nconst ocrResults = $input.all().map((item) => item.json);\n\n// Define fields to extract\nconst fields = [\n  \"Name\",\n  \"Date of Birth\",\n  \"Patient ID\",\n  \"Date of Visit\",\n  \"Referring Physician\",\n  \"Department\",\n  \"Symptoms\",\n  \"Blood Pressure\",\n  \"Heart Rate\",\n  \"Temperature\",\n  \"Lab Results\",\n  \"Diagnosis\",\n  \"Medications\",\n  \"Next Appointment\",\n  \"Notes\",\n];\n\nconst allPatientRecords = [];\n\n// Process each OCR result\nocrResults.forEach((result) => {\n  // Combine all pages into a single text for processing\n  let allText = \"\";\n  if (result.pages && Array.isArray(result.pages)) {\n    result.pages.forEach((page) => {\n      if (page.markdown) {\n        allText += page.markdown + \"\\n\";\n      }\n    });\n  }\n  \n  // Split the text into patient record sections\n  // Look for patterns like \"Patient Record 1\", \"🧾 Patient Record 2\", etc.\n  const recordSections = allText.split(/(?:🧾\\s*)?Patient Record\\s*\\d+/g).filter(section => section.trim().length > 0);\n  console.log(`Found ${recordSections.length} potential patient record sections`);\n  \n  // Process each patient record section\n  recordSections.forEach((section, index) => {\n    // Create a new patient record object\n    const patientRecord = {};\n    \n    // Add Patient Name which has a different pattern than other fields\n    const nameMatch = section.match(/Patient Name:\\s*([^\\n]+)/);\n    if (nameMatch) {\n      patientRecord[\"Name\"] = nameMatch[1].trim();\n    }\n    \n    // Extract all other fields\n    fields.forEach((field) => {\n      if (field === \"Name\") return; // Already handled above\n      \n      // Create a regex pattern for the field\n      const pattern = new RegExp(`${field}:\\\\s*([^\\\\n]+)`, 'i');\n      const match = section.match(pattern);\n      \n      if (match) {\n        patientRecord[field] = match[1].trim();\n      }\n      \n      // Special handling for Lab Results which might span multiple lines\n      if (field === \"Lab Results\" && !patientRecord[field]) {\n        const labStartIndex = section.indexOf(\"Lab Results:\");\n        if (labStartIndex !== -1) {\n          let labEndIndex = -1;\n          \n          // Find where lab results end (before Diagnosis or next field)\n          for (const nextField of [\"Diagnosis\", \"Medications\", \"Next Appointment\"]) {\n            const nextFieldIndex = section.indexOf(`${nextField}:`, labStartIndex);\n            if (nextFieldIndex !== -1 && (labEndIndex === -1 || nextFieldIndex < labEndIndex)) {\n              labEndIndex = nextFieldIndex;\n            }\n          }\n          \n          if (labEndIndex !== -1) {\n            let labResults = section.substring(labStartIndex + \"Lab Results:\".length, labEndIndex).trim();\n            // Clean up lab results\n            labResults = labResults.replace(/●/g, '').replace(/\\n\\s*/g, ', ').trim();\n            patientRecord[field] = labResults;\n          }\n        }\n      }\n    });\n    \n    // Only add records that have at least a name or patient ID\n    if (patientRecord[\"Name\"] || patientRecord[\"Patient ID\"]) {\n      console.log(`Extracted data for patient ${index + 1}: ${patientRecord[\"Name\"] || patientRecord[\"Patient ID\"]}`);\n      allPatientRecords.push(patientRecord);\n    }\n  });\n});\n\nconsole.log(`Total patient records extracted: ${allPatientRecords.length}`);\n\n// Return all extracted patient records\nreturn allPatientRecords;"
+      },
+      "id": "Data_Cleaning_Id",
+      "name": "Data cleaning",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1152,
+        240
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a paralegal assistant for a personal injury law firm. You are given raw OCR text from medical records. Your task is:\n1. Generate a structured medical chronology in date order: date, provider, visit type, key findings, treatments, medications\n2. Flag any treatment gaps, pre-existing conditions, or billing inconsistencies\n3. Write a one-paragraph case summary an attorney can read in 60 seconds\n\nFormat your output with three sections: CHRONOLOGY, FLAGS, and CASE SUMMARY.\n\nHere is the OCR text:\n{{ $('Get OCR Results').item.json.pages[0].markdown }}"
+            },
+            {
+              "role": "system",
+              "content": "You are a paralegal assistant for a personal injury law firm."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1376,
+        240
+      ],
+      "id": "OpenAI_API_Id",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "OpenAI_API_Cred_Id",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "has:attachment filename:pdf",
+          "sender": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        32,
+        240
+      ],
+      "id": "Gmail_Trigger_Id",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Gmail_Trigger_Cred_Id",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        240
+      ],
+      "id": "Gmail_OAuth_Id",
+      "name": "Get a message",
+      "webhookId": "Webhook_Id",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Gmail_OAuth_Cred_Id",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Data cleaning": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Signed URL": {
+      "main": [
+        [
+          {
+            "node": "Get OCR Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get OCR Results": {
+      "main": [
+        [
+          {
+            "node": "Data cleaning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Mistral": {
+      "main": [
+        [
+          {
+            "node": "Get Signed URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "Upload to Mistral",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "Version_Id",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "Instance_Id"
+  },
+  "nodeGroups": [],
+  "id": "Node_Groups_Id",
+  "tags": []
+}
